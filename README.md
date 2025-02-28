@@ -1,3 +1,3 @@
-# React Tic tac Tow App 3X3
+# React Tic tac Toe App 3X3
 
 ![screenshot](public/screenshot.png)
