@@ -1,68 +1,81 @@
-import React from "react";
 import { useState } from "react";
 
-const inititalState = () => Array(9).fill(null);
-const winningPatterns = [
-  [0, 1, 2], //row1
-  [3, 4, 5], //row2
-  [6, 7, 8], //row3
-  [0, 3, 6], //column1
-  [1, 4, 7], //column2
-  [2, 5, 8], //column3
-  [0, 4, 8], //diagonal1
-  [2, 4, 6], //diagonal2
-];
+const initialBoard = (size) => Array(size * size).fill(null);
 
-function useTickTack() {
-  const [board, setBoard] = useState(inititalState());
-  const [isXNext, setIsXNext] = useState(true);
+export const useTickTack = ({ size }) => {
+  const [board, setBoard] = useState(initialBoard(size));
+  const [isXTurn, setIsXTurn] = useState(false);
 
-  const calculateWinner = () => {
-    const currentBoard = board;
-    for (let i = 0; i < winningPatterns.length; i++) {
-      const [a, b, c] = winningPatterns[i];
+  const getStatus = () => {
+    const winner = calculateMoves();
+    if (winner) {
+      return `Player ${winner} is winner`;
+    }
+    if (!board.includes(null)) return "It is a Draw!";
+    return `Player X turn`;
+  };
+
+  const calculateMoves = () => {
+    const patterns = [];
+    // rows
+    for (let row = 0; row < size; row++) {
+      patterns.push(
+        [...Array(size)].map((_, index) => {
+          return row * size + index;
+        })
+      );
+    }
+    // columns
+    for (let col = 0; col < size; col++) {
+      patterns.push(
+        [...Array(size)].map((_, index) => {
+          return index * size + col;
+        })
+      );
+    }
+
+    // diagonals \
+    patterns.push(
+      [...Array(size)].map((_, index) => {
+        return index * (size + 1);
+      })
+    );
+
+    // anti-diagonals /
+    patterns.push(
+      [...Array(size)].map((_, index) => {
+        return (index + 1) * (size - 1);
+      })
+    );
+
+    for (let i = 0; i < patterns.length; i++) {
+      const pattern = patterns[i];
+      const first = pattern[0];
       if (
-        currentBoard[a] &&
-        currentBoard[a] === currentBoard[b] &&
-        currentBoard[a] === currentBoard[c]
+        board[first] &&
+        pattern.every((index) => board[index] === board[first])
       ) {
-        return currentBoard[a];
+        return board[first];
       }
     }
+
     return null;
   };
 
   const handleClick = (index) => {
-    const winner = calculateWinner();
+    const winner = calculateMoves();
+    console.log({ board });
+    console.log(winner);
     if (winner || board[index]) return;
-    const newboard = [...board];
-    newboard[index] = isXNext ? "X" : "O";
-    setBoard(newboard);
-    setIsXNext(!isXNext);
-  };
-
-  const getStatusMessage = () => {
-    const winner = calculateWinner();
-    if (winner) {
-      return `Player ${winner} wins!`;
-    }
-    if (!board.includes(null)) return "It's a Draw";
-    return `Player ${isXNext ? "X" : "O"} turn`;
+    const newBoard = [...board];
+    newBoard[index] = isXTurn ? "X" : "O";
+    setBoard(newBoard);
+    setIsXTurn(!isXTurn);
   };
 
   const resetGame = () => {
-    setBoard(inititalState());
-    setIsXNext(true);
+    setBoard(initialBoard(size));
+    setIsXTurn(false);
   };
-
-  return {
-    isXNext,
-    board,
-    handleClick,
-    calculateWinner,
-    getStatusMessage,
-    resetGame,
-  };
-}
-
-export default useTickTack;
+  return { board, getStatus, resetGame, handleClick };
+};
